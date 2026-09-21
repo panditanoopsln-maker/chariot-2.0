@@ -3,3 +3,4 @@ groq
 ddgs
 beautifulsoup4
 lxml
+python-dotenv
