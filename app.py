@@ -1,14 +1,18 @@
 import streamlit as st
 import os
-from dotenv import load_dotenv
 from groq import Groq
 from ddgs import DDGS
 
-load_dotenv()
+# Secret loading - 100% fixed
 try:
     GROQ_KEY = st.secrets["GROQ_API_KEY"]
+    GROQ_KEY = GROQ_KEY.strip() # space hatane ke liye
 except:
     GROQ_KEY = os.getenv("GROQ_API_KEY")
+
+if not GROQ_KEY:
+    st.error("GROQ_API_KEY not found! Go to Manage app -> Settings -> Secrets me key daalo.")
+    st.stop()
 
 st.set_page_config(page_title="CHARIOT 2.0", page_icon="🏹", layout="wide")
 
@@ -25,7 +29,7 @@ st.markdown("""
 .title { text-align:center; font-size:50px; font-weight:900; color:#FF5500; margin-top:10px; }
 </style>
 <div class="sky"><div class="plane">✈️</div></div>
-<div class="track"><div class="train">🚃🚃🚃🚃🚃🚃🚃🚃🚂</div></div>
+<div class="track"><div class="train">🚃🚃🚃🚃🚂</div></div>
 <div class="road"><div class="bus">🚌💨</div></div>
 <div class="title">CHARIOT 2.0</div>
 <p style="text-align:center; color:grey;">Your Rath for Every Journey - LIVE Search Enabled</p>
@@ -38,6 +42,7 @@ with c3: days = st.number_input("Days", 1, 30, 3)
 with c4: budget = st.selectbox("Budget", ["Cheap", "Medium", "Luxury"])
 
 if st.button("🚀 Search Live Plan", use_container_width=True, type="primary"):
+    client = Groq(api_key=GROQ_KEY)
     with st.spinner("Fetching LIVE data from internet..."):
         live_info = ""
         try:
@@ -48,16 +53,9 @@ if st.button("🚀 Search Live Plan", use_container_width=True, type="primary"):
         except:
             live_info = "Live search temporarily unavailable, use general knowledge"
 
-        client = Groq(api_key=GROQ_KEY)
         prompt = f"Create detailed travel plan from {source} to {destination} for {days} days, budget {budget}. Use live info: {live_info}. Give transport, hotels, itinerary, cost."
 
-        # WORKING MODELS ONLY - NO 404
-        models = [
-    "llama-3.1-8b-instant",
-    "llama-3.3-70b-versatile",
-    "llama-3.3-70b-versatile",
-    "openai/gpt-oss-20b"
-]
+        models = ["llama-3.1-8b-instant", "llama-3.3-70b-versatile"]
 
         success = False
         for model_name in models:
@@ -75,6 +73,7 @@ if st.button("🚀 Search Live Plan", use_container_width=True, type="primary"):
                 success = True
                 break
             except Exception as e:
+                st.write(f"Trying next model... {e}")
                 continue
 
         if not success:
