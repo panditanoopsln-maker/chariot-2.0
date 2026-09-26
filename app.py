@@ -26,7 +26,7 @@ bg_data = get_bg()
 if bg_data:
     st.markdown(f"""
     <style>
- .stApp {{
+.stApp {{
         background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.65)), url("data:image/jpeg;base64,{bg_data}");
         background-size: cover;
         background-position: center;
@@ -99,8 +99,26 @@ st.markdown("""
 <div class="tiranga-title">
     <span class="saffron">SAFAR</span><span class="chakra">☸️</span><span class="green">MATE 2.0</span>
 </div>
-<div class="sub-title">SYSTEM ONLINE • GPS + VENDOR INTELLIGENCE • LIVE SEARCH</div>
+<div class="sub-title">SYSTEM ONLINE • GPS + VENDOR INTELLIGENCE • LIVE SEARCH + WEATHER</div>
 """, unsafe_allow_html=True)
+
+# ===== NEW: WEATHER AGENT (Added Only This) =====
+def get_weather_agent(place):
+    try:
+        # No API key needed - wttr.in
+        url = f"https://wttr.in/{place}?format=j1"
+        r = requests.get(url, timeout=8).json()
+        curr = r['current_condition'][0]
+        weather_data = {
+            "temp": curr['temp_C'],
+            "feels": curr['FeelsLikeC'],
+            "desc": curr['weatherDesc'][0]['value'],
+            "humidity": curr['humidity'],
+            "wind": curr['windspeedKmph']
+        }
+        return weather_data
+    except Exception as e:
+        return None
 
 # ===== SESSION STATE =====
 if "chat_history" not in st.session_state:
@@ -138,15 +156,24 @@ with tab1:
 
     lat_input = st.text_input("Paste LAT,LON here (e.g. 26.8467,80.9462) for vendor scan", "")
     if st.button("🚀 Search Live Plan + Scan Vendors", use_container_width=True, type="primary"):
-        with st.spinner("Fetching LIVE data..."):
+        with st.spinner("Fetching LIVE data + WEATHER..."):
             live_info = ""
             try:
                 with DDGS() as ddgs:
                     q = f"{source} to {destination} flight train bus price hotels {budget}"
                     results = list(ddgs.text(q, max_results=5))
-                    live_info = "\\n".join([r['body'] for r in results])
+                    live_info = "\n".join([r['body'] for r in results])
             except:
                 live_info = "Live search unavailable"
+
+            # WEATHER FETCH
+            dest_weather = get_weather_agent(destination)
+            source_weather = get_weather_agent(source)
+
+            weather_text = ""
+            if dest_weather:
+                st.markdown(f'<div class="glass" style="border-left: 4px solid #FF9933;">🌦️ <b>{destination} Weather:</b> {dest_weather["temp"]}°C, {dest_weather["desc"]}, Humidity: {dest_weather["humidity"]}% | <b>{source} Weather:</b> {source_weather["temp"] if source_weather else "N/A"}°C</div>', unsafe_allow_html=True)
+                weather_text = f"Destination {destination} weather is {dest_weather['temp']}C {dest_weather['desc']}. Source {source} weather {source_weather['temp'] if source_weather else ''}C."
 
             vendor_info = ""
             if lat_input and "," in lat_input:
@@ -155,19 +182,19 @@ with tab1:
                     overpass_query = f"[out:json];node(around:500,{lat},{lon})[amenity~'fast_food|street_vendor|food_court|restaurant|cafe'];out 10;"
                     r = requests.post("https://overpass-api.de/api/interpreter", data=overpass_query, timeout=10)
                     data = r.json()
-                    vendor_info = "\\nNearby Vendors:\\n" + "\\n".join([f"- {e.get('tags',{}).get('name','Unnamed')} ({e.get('tags',{}).get('amenity')})" for e in data.get('elements',[])[:10]])
+                    vendor_info = "\nNearby Vendors:\n" + "\n".join([f"- {e.get('tags',{}).get('name','Unnamed')} ({e.get('tags',{}).get('amenity')})" for e in data.get('elements',[])[:10]])
                 except:
                     vendor_info = "Vendor scan failed"
 
             client = Groq(api_key=GROQ_KEY)
-            prompt = f"Create detailed travel plan from {source} to {destination} for {days} days, budget {budget}. Use live info: {live_info}. {vendor_info}. Give transport, hotels, itinerary, cost, and also list street food & cheap vendors."
+            prompt = f"Create detailed travel plan from {source} to {destination} for {days} days, budget {budget}. Use live info: {live_info}. {vendor_info}. Weather info: {weather_text}. Give transport, hotels, itinerary, cost, and also list street food & cheap vendors. If weather is rainy suggest indoor alternatives."
 
             models = ["openai/gpt-oss-20b","llama-3.3-70b-versatile","llama-3.1-8b-instant"]
             for model_name in models:
                 try:
                     res = client.chat.completions.create(model=model_name, messages=[{"role":"user","content":prompt}], max_tokens=3000)
                     st.balloons()
-                    st.success(f"PLAN DECODED | Model: {model_name}")
+                    st.success(f"PLAN DECODED | Model: {model_name} | Weather Integrated")
                     st.session_state.trip_context = res.choices[0].message.content
                     st.markdown(f'<div class="glass">{res.choices[0].message.content}</div>', unsafe_allow_html=True)
                     break
@@ -185,7 +212,8 @@ with tab2:
             st.markdown(q)
         with st.chat_message("assistant"):
             client = Groq(api_key=GROQ_KEY)
-            context_prompt = f"You are SAFARMATE vendor guide. Trip context: {st.session_state.trip_context}. Location: {lat_input}. User asks: {q}. Answer in Hinglish."
+            # Also fetch weather for asked place in chat
+            context_prompt = f"You are SAFARMATE vendor guide. Trip context: {st.session_state.trip_context}. Location: {lat_input}. User asks: {q}. Answer in Hinglish. If user asks about weather, use your knowledge."
             try:
                 res = client.chat.completions.create(model="openai/gpt-oss-20b", messages=[{"role":"user","content":context_prompt}], max_tokens=800)
                 ans = res.choices[0].message.content
