@@ -27,7 +27,7 @@ if bg_data:
     st.markdown(f"""
     <style>
 .stApp {{
-        background: linear-gradient(rgba(0,0,0,0.78), rgba(0,0,0,0.88)), url("data:image/jpeg;base64,{bg_data}");
+        background: linear-gradient(rgba(0,0,0,0.60), rgba(0,0,0,0.75)), url("data:image/jpeg;base64,{bg_data}");
         background-size: cover;
         background-position: center;
         background-attachment: fixed;
@@ -54,7 +54,7 @@ st.markdown("""
 }
 .sky { margin-top: 0px!important; }
 .plane { position: absolute; font-size: 18px!important; animation: fly 6s linear infinite; top: 4px; }
-.train { position: absolute; font-size: 18px!important; animation: run 8s linear infinite; top: 3px; white-space: nowrap; }
+.train { position: absolute; font-size: 22px!important; animation: run 8s linear infinite; top: 2px; white-space: nowrap; }
 .bus { position: absolute; font-size: 18px!important; animation: run 5s linear infinite; top: 3px; white-space: nowrap; }
 @keyframes fly { 0% { left: -10%; } 100% { left: 110%; } }
 @keyframes run { 0% { left: -50%; } 100% { left: 110%; } }
@@ -87,7 +87,6 @@ st.markdown("""
     text-shadow: 1px 1px 4px black;
 }
 
-/* ===== NAYA HINDI TAGLINE ===== */
 .hindi-tagline {
     text-align:center;
     font-family:'Noto Sans Devanagari', sans-serif;
@@ -100,56 +99,55 @@ st.markdown("""
 }
 
 .glass {
-    background: rgba(0,0,0,0.72); backdrop-filter: blur(10px);
-    border: 1px solid rgba(255,255,255,0.18); border-radius: 12px;
-    padding: 16px;
-    color: white!important;
+    background: rgba(0,0,0,0.68)!important;
+    backdrop-filter: blur(12px)!important;
+    border: 1px solid rgba(255,255,255,0.22)!important;
+    border-radius: 12px!important;
+    padding: 16px!important;
 }
-
-/* ===== NEW FIX FOR MOBILE VISIBILITY ===== */
-.glass p,.glass div,.glass li,.glass span {
-    color: #ffffff!important;
-    opacity: 1!important;
+.glass p,.glass li,.glass h1,.glass h2,.glass h3,.glass h4 {
+    color: #FFFFFF!important;
 }
-.stMarkdown.glass {
-    background: rgba(255,255,255,0.96)!important;
+.glass table {
+    background: rgba(255,255,255,0.95)!important;
+    border-radius: 8px!important;
+    width: 100%!important;
+    margin: 10px 0!important;
+}
+.glass th {
+    background: #FF9933!important;
     color: #000000!important;
+    font-weight: 800!important;
+    padding: 10px!important;
 }
-.stMarkdown.glass p,.stMarkdown.glass div,.stMarkdown.glass li {
+.glass td {
+    background: rgba(255,255,255,0.95)!important;
     color: #000000!important;
     -webkit-text-fill-color: #000000!important;
+    font-weight: 700!important;
+    border: 1px solid #ddd!important;
+    padding: 8px!important;
 }
+
+/* ===== CHAT KA FINAL FIX - USER KA QUESTION + BOT KA ANSWER DONO BLACK ===== */
 div[data-testid="stChatMessage"] {
     background: #ffffff!important;
     border: 1px solid #FF9933!important;
     border-radius: 12px!important;
 }
-div[data-testid="stChatMessage"] p {
+div[data-testid="stChatMessage"] p,
+div[data-testid="stChatMessage"] div,
+div[data-testid="stChatMessage"] span,
+div[data-testid="stChatMessage"] li,
+div[data-testid="stChatMessage"] b {
     color: #000000!important;
+    -webkit-text-fill-color: #000000!important;
+    opacity: 1!important;
 }
+
 @media only screen and (max-width: 768px) {
-  .stApp {
-        background: linear-gradient(rgba(0,0,0,0.85), rgba(0,0,0,0.92)), url("data:image/jpeg;base64,BGDATA")!important;
-        background-size: cover!important;
-    }
-  .glass {
-        background: rgba(255,255,255,0.98)!important;
-        backdrop-filter: none!important;
-    }
-  .glass p,.glass div,.glass li,.glass span,.glass b {
-        color: #000000!important;
-        -webkit-text-fill-color: #000000!important;
-        text-shadow: none!important;
-        font-weight: 600!important;
-    }
-    input {
-        background: white!important;
-        color: black!important;
-        -webkit-text-fill-color: black!important;
-    }
-   .hindi-tagline {
-        font-size:17px!important;
-    }
+ .hindi-tagline { font-size:17px!important; }
+  input { background: white!important; color: black!important; -webkit-text-fill-color: black!important; }
 }
 </style>
 
