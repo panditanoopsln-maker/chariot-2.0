@@ -39,6 +39,7 @@ if bg_data:
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@700&display=swap');
 
 .sky,.track,.road {
     background: rgba(0,0,0,0.55)!important;
@@ -82,9 +83,22 @@ st.markdown("""
 .sub-title {
     text-align:center; color:#e0f7fa;
     font-family:monospace; font-size:13px;
-    letter-spacing:1.5px; margin-bottom:10px;
+    letter-spacing:1.5px; margin-bottom:6px;
     text-shadow: 1px 1px 4px black;
 }
+
+/* ===== NAYA HINDI TAGLINE ===== */
+.hindi-tagline {
+    text-align:center;
+    font-family:'Noto Sans Devanagari', sans-serif;
+    font-size:20px!important;
+    font-weight:700;
+    color:#FFD700;
+    letter-spacing:0.5px;
+    margin-bottom:14px;
+    text-shadow: 0 0 8px rgba(255,215,0,0.7), 2px 2px 6px black;
+}
+
 .glass {
     background: rgba(0,0,0,0.72); backdrop-filter: blur(10px);
     border: 1px solid rgba(255,255,255,0.18); border-radius: 12px;
@@ -92,13 +106,11 @@ st.markdown("""
     color: white!important;
 }
 
-/* ===== NEW FIX FOR MOBILE VISIBILITY - SIRF YE ADDED HAI ===== */
+/* ===== NEW FIX FOR MOBILE VISIBILITY ===== */
 .glass p,.glass div,.glass li,.glass span {
     color: #ffffff!important;
     opacity: 1!important;
 }
-
-/* Result wala glass alag se solid white for readability */
 .stMarkdown.glass {
     background: rgba(255,255,255,0.96)!important;
     color: #000000!important;
@@ -107,8 +119,6 @@ st.markdown("""
     color: #000000!important;
     -webkit-text-fill-color: #000000!important;
 }
-
-/* Chat messages solid */
 div[data-testid="stChatMessage"] {
     background: #ffffff!important;
     border: 1px solid #FF9933!important;
@@ -117,18 +127,16 @@ div[data-testid="stChatMessage"] {
 div[data-testid="stChatMessage"] p {
     color: #000000!important;
 }
-
-/* MOBILE PE FINAL FIX */
 @media only screen and (max-width: 768px) {
-   .stApp {
+  .stApp {
         background: linear-gradient(rgba(0,0,0,0.85), rgba(0,0,0,0.92)), url("data:image/jpeg;base64,BGDATA")!important;
         background-size: cover!important;
     }
-   .glass {
+  .glass {
         background: rgba(255,255,255,0.98)!important;
         backdrop-filter: none!important;
     }
-   .glass p,.glass div,.glass li,.glass span,.glass b {
+  .glass p,.glass div,.glass li,.glass span,.glass b {
         color: #000000!important;
         -webkit-text-fill-color: #000000!important;
         text-shadow: none!important;
@@ -138,6 +146,9 @@ div[data-testid="stChatMessage"] p {
         background: white!important;
         color: black!important;
         -webkit-text-fill-color: black!important;
+    }
+   .hindi-tagline {
+        font-size:17px!important;
     }
 }
 </style>
@@ -150,12 +161,12 @@ div[data-testid="stChatMessage"] p {
     <span class="saffron">SAFAR</span><span class="chakra">☸️</span><span class="green">MATE 2.0</span>
 </div>
 <div class="sub-title">SYSTEM ONLINE • GPS + VENDOR INTELLIGENCE • LIVE SEARCH + WEATHER</div>
+<div class="hindi-tagline">SAFARMATE-2.0 आपके सफ़र का साथी</div>
 """.replace("BGDATA", bg_data), unsafe_allow_html=True)
 
 # ===== NEW: WEATHER AGENT (Added Only This) =====
 def get_weather_agent(place):
     try:
-        # No API key needed - wttr.in
         url = f"https://wttr.in/{place}?format=j1"
         r = requests.get(url, timeout=8).json()
         curr = r['current_condition'][0]
@@ -216,7 +227,6 @@ with tab1:
             except:
                 live_info = "Live search unavailable"
 
-            # WEATHER FETCH
             dest_weather = get_weather_agent(destination)
             source_weather = get_weather_agent(source)
 
@@ -262,7 +272,6 @@ with tab2:
             st.markdown(q)
         with st.chat_message("assistant"):
             client = Groq(api_key=GROQ_KEY)
-            # Also fetch weather for asked place in chat
             context_prompt = f"You are SAFARMATE vendor guide. Trip context: {st.session_state.trip_context}. Location: {lat_input}. User asks: {q}. Answer in Hinglish. If user asks about weather, use your knowledge."
             try:
                 res = client.chat.completions.create(model="openai/gpt-oss-20b", messages=[{"role":"user","content":context_prompt}], max_tokens=800)
