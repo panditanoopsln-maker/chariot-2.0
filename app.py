@@ -27,7 +27,7 @@ if bg_data:
     st.markdown(f"""
     <style>
 .stApp {{
-        background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.65)), url("data:image/jpeg;base64,{bg_data}");
+        background: linear-gradient(rgba(0,0,0,0.78), rgba(0,0,0,0.88)), url("data:image/jpeg;base64,{bg_data}");
         background-size: cover;
         background-position: center;
         background-attachment: fixed;
@@ -41,7 +41,7 @@ st.markdown("""
 @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@900&display=swap');
 
 .sky,.track,.road {
-    background: rgba(0,0,0,0.25)!important;
+    background: rgba(0,0,0,0.55)!important;
     backdrop-filter: blur(2px);
     height: 32px!important;
     position: relative; overflow: hidden;
@@ -86,9 +86,59 @@ st.markdown("""
     text-shadow: 1px 1px 4px black;
 }
 .glass {
-    background: rgba(0,0,0,0.45); backdrop-filter: blur(8px);
-    border: 1px solid rgba(255,255,255,0.15); border-radius: 10px;
+    background: rgba(0,0,0,0.72); backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.18); border-radius: 12px;
     padding: 16px;
+    color: white!important;
+}
+
+/* ===== NEW FIX FOR MOBILE VISIBILITY - SIRF YE ADDED HAI ===== */
+.glass p,.glass div,.glass li,.glass span {
+    color: #ffffff!important;
+    opacity: 1!important;
+}
+
+/* Result wala glass alag se solid white for readability */
+.stMarkdown.glass {
+    background: rgba(255,255,255,0.96)!important;
+    color: #000000!important;
+}
+.stMarkdown.glass p,.stMarkdown.glass div,.stMarkdown.glass li {
+    color: #000000!important;
+    -webkit-text-fill-color: #000000!important;
+}
+
+/* Chat messages solid */
+div[data-testid="stChatMessage"] {
+    background: #ffffff!important;
+    border: 1px solid #FF9933!important;
+    border-radius: 12px!important;
+}
+div[data-testid="stChatMessage"] p {
+    color: #000000!important;
+}
+
+/* MOBILE PE FINAL FIX */
+@media only screen and (max-width: 768px) {
+   .stApp {
+        background: linear-gradient(rgba(0,0,0,0.85), rgba(0,0,0,0.92)), url("data:image/jpeg;base64,BGDATA")!important;
+        background-size: cover!important;
+    }
+   .glass {
+        background: rgba(255,255,255,0.98)!important;
+        backdrop-filter: none!important;
+    }
+   .glass p,.glass div,.glass li,.glass span,.glass b {
+        color: #000000!important;
+        -webkit-text-fill-color: #000000!important;
+        text-shadow: none!important;
+        font-weight: 600!important;
+    }
+    input {
+        background: white!important;
+        color: black!important;
+        -webkit-text-fill-color: black!important;
+    }
 }
 </style>
 
@@ -100,7 +150,7 @@ st.markdown("""
     <span class="saffron">SAFAR</span><span class="chakra">☸️</span><span class="green">MATE 2.0</span>
 </div>
 <div class="sub-title">SYSTEM ONLINE • GPS + VENDOR INTELLIGENCE • LIVE SEARCH + WEATHER</div>
-""", unsafe_allow_html=True)
+""".replace("BGDATA", bg_data), unsafe_allow_html=True)
 
 # ===== NEW: WEATHER AGENT (Added Only This) =====
 def get_weather_agent(place):
