@@ -6,6 +6,9 @@ from groq import Groq
 from ddgs import DDGS
 import requests
 import streamlit.components.v1 as components
+import sqlite3
+import datetime
+import urllib.parse
 
 load_dotenv()
 try:
@@ -14,6 +17,27 @@ except:
     GROQ_KEY = os.getenv("GROQ_API_KEY")
 
 st.set_page_config(page_title="SAFARMATE 2.0", page_icon="🇮🇳", layout="wide")
+
+# ===== FOR TESTING - ONLY YOUR NUMBER WILL GET WHATSAPP =====
+MY_WHATSAPP_NUMBER = "918887392586" # Put your number here e.g. 919876543210
+
+# ===== BOOKING DATABASE =====
+conn = sqlite3.connect('safarmate.db', check_same_thread=False)
+c = conn.cursor()
+c.execute('''CREATE TABLE IF NOT EXISTS bookings (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_name TEXT,
+    vendor_name TEXT,
+    type TEXT,
+    date TEXT,
+    status TEXT
+)''')
+conn.commit()
+
+def save_booking(user_name, vendor_name, v_type, date):
+    c.execute("INSERT INTO bookings (user_name, vendor_name, type, date, status) VALUES (?,?,?,?,?)",
+              (user_name, vendor_name, v_type, str(date), "CONFIRMED"))
+    conn.commit()
 
 # ===== BACKGROUND =====
 def get_bg():
@@ -35,7 +59,7 @@ if bg_data:
     </style>
     """, unsafe_allow_html=True)
 
-# ===== ULTRA PATLA + TIRANGA TITLE =====
+# ===== TITLE STYLES =====
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@900&display=swap');
@@ -129,7 +153,6 @@ st.markdown("""
     padding: 8px!important;
 }
 
-/* ===== CHAT KA FINAL FIX - USER KA QUESTION + BOT KA ANSWER DONO BLACK ===== */
 div[data-testid="stChatMessage"] {
     background: #ffffff!important;
     border: 1px solid #FF9933!important;
@@ -146,7 +169,7 @@ div[data-testid="stChatMessage"] b {
 }
 
 @media only screen and (max-width: 768px) {
- .hindi-tagline { font-size:17px!important; }
+.hindi-tagline { font-size:17px!important; }
   input { background: white!important; color: black!important; -webkit-text-fill-color: black!important; }
 }
 </style>
@@ -159,10 +182,9 @@ div[data-testid="stChatMessage"] b {
     <span class="saffron">SAFAR</span><span class="chakra">☸️</span><span class="green">MATE 2.0</span>
 </div>
 <div class="sub-title">SYSTEM ONLINE • GPS + VENDOR INTELLIGENCE • LIVE SEARCH + WEATHER</div>
-<div class="hindi-tagline">SAFARMATE-2.0 आपके सफ़र का साथी</div>
+<div class="hindi-tagline">Your Trusted Travel Companion</div>
 """.replace("BGDATA", bg_data), unsafe_allow_html=True)
 
-# ===== NEW: WEATHER AGENT (Added Only This) =====
 def get_weather_agent(place):
     try:
         url = f"https://wttr.in/{place}?format=j1"
@@ -179,7 +201,6 @@ def get_weather_agent(place):
     except Exception as e:
         return None
 
-# ===== SESSION STATE =====
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
 if "trip_context" not in st.session_state:
@@ -187,7 +208,7 @@ if "trip_context" not in st.session_state:
 if "latlon" not in st.session_state:
     st.session_state.latlon = None
 
-tab1, tab2 = st.tabs(["🧪 MISSION PLANNER", "🤖 VENDOR & STREET FOOD CHATBOT + GPS"])
+tab1, tab2, tab3 = st.tabs(["MISSION PLANNER", "VENDOR & STREET FOOD CHATBOT + GPS", "MY BOOKINGS"])
 
 with tab1:
     st.markdown('<div class="glass">', unsafe_allow_html=True)
@@ -198,9 +219,9 @@ with tab1:
     with c4: budget = st.selectbox("Budget", ["Cheap", "Medium", "Luxury"])
     st.markdown('</div>', unsafe_allow_html=True)
 
-    st.markdown("#### 📍 GPS MODULE")
+    st.markdown("#### GPS MODULE")
     components.html("""
-    <button onclick="getLoc()" style="background:#FF9933;color:black;padding:10px 20px;border-radius:8px;border:none;font-weight:bold;cursor:pointer;">📡 DETECT MY LOCATION</button>
+    <button onclick="getLoc()" style="background:#FF9933;color:black;padding:10px 20px;border-radius:8px;border:none;font-weight:bold;cursor:pointer;">DETECT MY LOCATION</button>
     <p id="loc" style="color:#00ff88;font-family:monospace;margin-top:10px;font-size:13px;background:rgba(0,0,0,0.6);padding:6px;border-radius:6px;"></p>
     <script>
     function getLoc(){
@@ -214,7 +235,7 @@ with tab1:
     """, height=90)
 
     lat_input = st.text_input("Paste LAT,LON here (e.g. 26.8467,80.9462) for vendor scan", "")
-    if st.button("🚀 Search Live Plan + Scan Vendors", use_container_width=True, type="primary"):
+    if st.button("Search Live Plan + Scan Vendors", use_container_width=True, type="primary"):
         with st.spinner("Fetching LIVE data + WEATHER..."):
             live_info = ""
             try:
@@ -230,7 +251,7 @@ with tab1:
 
             weather_text = ""
             if dest_weather:
-                st.markdown(f'<div class="glass" style="border-left: 4px solid #FF9933;">🌦️ <b>{destination} Weather:</b> {dest_weather["temp"]}°C, {dest_weather["desc"]}, Humidity: {dest_weather["humidity"]}% | <b>{source} Weather:</b> {source_weather["temp"] if source_weather else "N/A"}°C</div>', unsafe_allow_html=True)
+                st.markdown(f'<div class="glass" style="border-left: 4px solid #FF9933;">Weather <b>{destination} Weather:</b> {dest_weather["temp"]}°C, {dest_weather["desc"]}, Humidity: {dest_weather["humidity"]}% | <b>{source} Weather:</b> {source_weather["temp"] if source_weather else "N/A"}°C</div>', unsafe_allow_html=True)
                 weather_text = f"Destination {destination} weather is {dest_weather['temp']}C {dest_weather['desc']}. Source {source} weather {source_weather['temp'] if source_weather else ''}C."
 
             vendor_info = ""
@@ -259,12 +280,54 @@ with tab1:
                 except:
                     continue
 
+    st.markdown('<div class="glass" style="margin-top:20px; border-left:4px solid #00FF88;">', unsafe_allow_html=True)
+    st.subheader("Quick Booking - Book From Here [TEST MODE - Only To You]")
+    b1,b2,b3 = st.columns(3)
+    with b1:
+        st.write("**OYO / Hotel**")
+        hotel_name = st.selectbox("Select Hotel", ["OYO Jankipuram 899", "OYO Townhouse Sec-G 1199", "Local Dharamshala 300"])
+        with st.form("hotel_book_form"):
+            uname = st.text_input("Your Name", key="h_name")
+            udate = st.date_input("Date", datetime.date.today(), key="h_date")
+            if st.form_submit_button("Confirm Hotel Booking"):
+                save_booking(uname, hotel_name, "HOTEL", udate)
+                msg = f"*SAFARMATE 2.0 TEST*\nBooking: {hotel_name}\nName: {uname}\nDate: {udate}\nType: HOTEL"
+                wa_link = f"https://wa.me/{MY_WHATSAPP_NUMBER}?text={urllib.parse.quote(msg)}"
+                st.success(f"{hotel_name} Booked! Saved in DB.")
+                st.markdown(f"**[Test on My WhatsApp]({wa_link})**")
+                st.balloons()
+    with b2:
+        st.write("**Tiffin / Street Food**")
+        food_name = st.selectbox("Select Food", ["Guddi Didi Tiffin 50", "Ramu Kaka Chai + Samosa 30", "Fish Thali Goa 120"])
+        with st.form("food_book_form"):
+            uname2 = st.text_input("Your Name", key="f_name")
+            udate2 = st.date_input("Date", datetime.date.today(), key="f_date")
+            if st.form_submit_button("Confirm Food Booking"):
+                save_booking(uname2, food_name, "FOOD", udate2)
+                msg = f"*SAFARMATE 2.0 TEST*\nBooking: {food_name}\nName: {uname2}\nDate: {udate2}\nType: FOOD"
+                wa_link = f"https://wa.me/{MY_WHATSAPP_NUMBER}?text={urllib.parse.quote(msg)}"
+                st.success(f"{food_name} Booked!")
+                st.markdown(f"**[Test on My WhatsApp]({wa_link})**")
+    with b3:
+        st.write("**E-Rickshaw / Ride**")
+        ride_name = st.selectbox("Select Ride", ["Auto KMCLU to Charbagh 100", "E-Rickshaw Jankipuram 30", "Bike Rental 300/day"])
+        with st.form("ride_book_form"):
+            uname3 = st.text_input("Your Name", key="r_name")
+            udate3 = st.date_input("Date", datetime.date.today(), key="r_date")
+            if st.form_submit_button("Confirm Ride Booking"):
+                save_booking(uname3, ride_name, "RIDE", udate3)
+                msg = f"*SAFARMATE 2.0 TEST*\nBooking: {ride_name}\nName: {uname3}\nDate: {udate3}\nType: RIDE"
+                wa_link = f"https://wa.me/{MY_WHATSAPP_NUMBER}?text={urllib.parse.quote(msg)}"
+                st.success(f"{ride_name} Booked!")
+                st.markdown(f"**[Test on My WhatsApp]({wa_link})**")
+    st.markdown('</div>', unsafe_allow_html=True)
+
 with tab2:
-    st.markdown("### 🤖 SAFARMATE AI - Vendor Guide")
+    st.markdown("### SAFARMATE AI - Vendor Guide")
     for msg in st.session_state.chat_history:
         with st.chat_message(msg["role"]):
             st.markdown(msg["content"])
-    if q := st.chat_input("Pucho: Goa me best cheap fish thali kahan milegi?"):
+    if q := st.chat_input("Ask: Where to get best cheap fish thali in Goa?"):
         st.session_state.chat_history.append({"role":"user","content":q})
         with st.chat_message("user"):
             st.markdown(q)
@@ -278,3 +341,19 @@ with tab2:
                 st.session_state.chat_history.append({"role":"assistant","content":ans})
             except Exception as e:
                 st.error(f"Bot error: {e}")
+
+with tab3:
+    st.markdown('<div class="glass">', unsafe_allow_html=True)
+    st.header("Your All Bookings")
+    bookings = c.execute("SELECT user_name, vendor_name, type, date, status FROM bookings ORDER BY id DESC").fetchall()
+    if bookings:
+        st.table(bookings)
+        if st.button("Clear All Bookings"):
+            c.execute("DELETE FROM bookings")
+            conn.commit()
+            st.rerun()
+    else:
+        st.info("No bookings yet. Go to Tab 1 and book Hotel / Food / Ride.")
+    st.markdown("---")
+    st.write(f"**TEST MODE ON:** All WhatsApp tests will go to this number: `{MY_WHATSAPP_NUMBER}`")
+    st.markdown('</div>', unsafe_allow_html=True)
